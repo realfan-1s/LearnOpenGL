@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{fdd6fafe-b7de-45fc-808b-097f6a35a4d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{607d7586-37ad-446f-8207-cf9be02e01ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="src\源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="src\资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="shader\HDR">
+      <UniqueIdentifier>{ef065f06-6f1e-4bb0-9e6e-0a2c5970151d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shader\Renderer">
+      <UniqueIdentifier>{183d7dea-513e-4883-9c79-579f6e0246a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shader\ScreenPostProcess">
+      <UniqueIdentifier>{cb35db22-98bc-439c-819f-430187755841}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader\lightVertex.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\lightFrag.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\lightCubeVertex.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\lightCubeFrag.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\skyboxVertex.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\skyboxFrag.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\quadVertex.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\quadFrag.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\lightCubeGeometry.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\HDRVertex.glsl">
+      <Filter>shader\HDR</Filter>
+    </None>
+    <None Include="shader\HDRFrag.glsl">
+      <Filter>shader\HDR</Filter>
+    </None>
+    <None Include="shader\blurVertex.glsl">
+      <Filter>shader\HDR</Filter>
+    </None>
+    <None Include="shader\blurFrag.glsl">
+      <Filter>shader\HDR</Filter>
+    </None>
+    <None Include="shader\postProcessVertex.glsl">
+      <Filter>shader\ScreenPostProcess</Filter>
+    </None>
+    <None Include="shader\postProcessFrag.glsl">
+      <Filter>shader\ScreenPostProcess</Filter>
+    </None>
+    <None Include="shader\gBufferVertex.glsl">
+      <Filter>shader\Renderer</Filter>
+    </None>
+    <None Include="shader\gBufferFrag.glsl">
+      <Filter>shader\Renderer</Filter>
+    </None>
+    <None Include="shader\frag.glsl">
+      <Filter>shader\Renderer</Filter>
+    </None>
+    <None Include="shader\vertex.glsl">
+      <Filter>shader\Renderer</Filter>
+    </None>
+    <None Include="shader\ssaoVertex.glsl">
+      <Filter>shader\ScreenPostProcess</Filter>
+    </None>
+    <None Include="shader\ssaoFrag.glsl">
+      <Filter>shader\ScreenPostProcess</Filter>
+    </None>
+    <None Include="shader\ssaoBlurVertex.glsl">
+      <Filter>shader\ScreenPostProcess</Filter>
+    </None>
+    <None Include="shader\ssaoBlurFrag.glsl">
+      <Filter>shader\ScreenPostProcess</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Shader.cpp">
+      <Filter>src\源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Camera.cpp">
+      <Filter>src\源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Light.cpp">
+      <Filter>src\源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Mesh.cpp">
+      <Filter>src\源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Model.cpp">
+      <Filter>src\源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src\源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer.cpp">
+      <Filter>src\源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Skybox.cpp">
+      <Filter>src\源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AntiAliasing.cpp">
+      <Filter>src\源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Shadow.cpp">
+      <Filter>src\源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\HDRLoader.cpp">
+      <Filter>src\源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SSAO.cpp">
+      <Filter>src\源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Shader.h">
+      <Filter>src\头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Camera.h">
+      <Filter>src\头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Light.h">
+      <Filter>src\头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stb_image.h">
+      <Filter>src\资源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Mesh.h">
+      <Filter>src\头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Model.h">
+      <Filter>src\头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer.h">
+      <Filter>src\头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DataDefine.h">
+      <Filter>src\头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Skybox.h">
+      <Filter>src\头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AntiAliasing.h">
+      <Filter>src\头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Shadow.h">
+      <Filter>src\头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\HDRLoader.h">
+      <Filter>src\头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SSAO.h">
+      <Filter>src\头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
