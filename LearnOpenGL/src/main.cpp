@@ -61,7 +61,7 @@ int main() {
 	glfwSetFramebufferSizeCallback(window, &frameBuffer_Size_Callback);
 	glfwSetCursorPosCallback(window, &MouseCallback);
 	glfwSetScrollCallback(window, ZoomCallback);
-	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	// 初始化GLAD
 	if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
 		cout << " 初始化GLAD失败 " << endl;
@@ -118,13 +118,12 @@ int main() {
 	// */
 	//glVertexAttribPointer(0, 3, GL_FLOAT,   GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
 
+	SSAO ssao(0.5f, 0.025f);
+	HDRLoader hdr(0.6f);
 	Renderer renderer;
 	Shadow shadow;
-	HDRLoader hdr(0.6f);
-	SSAO ssao(0.5f, 0.025f);
 	Light light("shader/lightVertex.glsl", "shader/lightFrag.glsl");
 	Shader shader("shader/vertex.glsl", "shader/frag.glsl");
-	Shader quadShader("shader/quadVertex.glsl", "shader/quadFrag.glsl");
 	Shader lightShader("shader/lightCubeVertex.glsl", "shader/lightCubeFrag.glsl", "shader/lightCubeGeometry.glsl");
 	Model nanosuit("asset/objects/nanosuit/nanosuit.obj", true);
 	Model backpack("asset/objects/backpack/backpack.obj", true);
@@ -201,6 +200,7 @@ int main() {
 		lightShader.SetMat4("model", model);
 		nanosuit.Draw(lightShader);
 
+
 		// 绘制物体,Geometry阶段
 		renderer.Use(camera.GetNearAndFar());
 		glDisable(GL_CULL_FACE);
@@ -232,9 +232,8 @@ int main() {
 
 		ssao.Use(renderer.GetPosBuffer(), renderer.GetNormalBuffer());
 
-		//hdr.BindToFloat32FBO();
+		hdr.BindToFloat32FBO();
 		shader.Use();
-		shader.SetVec3("viewPos", camera.GetCameraPos());
 		shader.SetInt("gPosition", 0);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, renderer.GetPosBuffer());
@@ -250,11 +249,13 @@ int main() {
 		shader.SetInt("ambientOcclusion", 4);
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, ssao.GetOcclusion());
+		shader.SetVec3("viewPos", camera.GetCameraPos());
 		shader.SetVec2("lightNearAndFar", nearPlane, farPlane);
 		shader.SetVec3("mainLight.lightPos", mainLightPosition);
 		shader.SetVec3("mainLight.lightColor", mainLightColor);
 		float mainRadius = Light::CalculateLightRadius(mainLightColor);
 		shader.SetFloat("mainLight.radius", mainRadius);
+		// TODO: 采用模板测试去除超出范围的灯光
 		for (int i = 0; i < MAX_LIGHT_COUNT; ++i)
 		{
 			shader.SetVec3(("lights[" + to_string(i) + "].lightPos").c_str(), lightPositions[i]);
@@ -264,26 +265,26 @@ int main() {
 		}
 		Model::RenderQuad();
 
-		//renderer.ComputeDepth(hdr.GetFBO());
-		//light.Use();
-		//model = glm::mat4(1.0f);
-		//model = glm::translate(model, mainLightPosition);
-		//model = glm::scale(model, glm::vec3(0.5f));
-		//light.SetMat4("model", model);
-		//light.SetVec3("lightColor", mainLightColor);
-		//Model::RenderCube();
-		//for (int i = 0; i < MAX_LIGHT_COUNT; ++i)
-		//{
-		//	model = glm::mat4(1.0f);
-		//	model = glm::translate(model, lightPositions[i]);
-		//	model = glm::scale(model, glm::vec3(0.15f));
-		//	light.SetMat4("model", model);
-		//	light.SetVec3("lightColor", lightColors[i]);
-		//	Model::RenderCube();
-		//}
+		renderer.ComputeDepth(hdr.GetFBO());
+		light.Use();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, mainLightPosition);
+		model = glm::scale(model, glm::vec3(0.5f));
+		light.SetMat4("model", model);
+		light.SetVec3("lightColor", mainLightColor);
+		Model::RenderCube();
+		for (int i = 0; i < MAX_LIGHT_COUNT; ++i)
+		{
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, lightPositions[i]);
+			model = glm::scale(model, glm::vec3(0.15f));
+			light.SetMat4("model", model);
+			light.SetVec3("lightColor", lightColors[i]);
+			Model::RenderCube();
+		}
 
-		//// 模糊泛光
-		//hdr.Use();
+		// 模糊泛光
+		hdr.Use();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

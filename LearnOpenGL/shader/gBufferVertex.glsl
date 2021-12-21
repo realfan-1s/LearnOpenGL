@@ -20,12 +20,12 @@ uniform int inverseNormal;
 uniform mat4 model;
 
 void main() {
-	vs_out.fragPos = model * vec4(aPos, 1.0f);
+	vs_out.fragPos = model * vec4(aPos, 1.0);
 	gl_Position = projection * view * vs_out.fragPos;
 	vs_out.uv = aTexcoord;
-	mat4 normalMatrix = transpose(inverse(model));
-	vec3 normal = normalize(inverseNormal * normalMatrix * vec4(aNormal, 0.0f)).xyz;
-	vec3 tangent = normalize(normalMatrix * vec4(aTangent, 0.0f)).xyz;
+	mat3 normalMatrix = transpose(inverse(mat3(model)));
+	vec3 normal = normalize(inverseNormal * normalMatrix * aNormal);
+	vec3 tangent = normalize(normalMatrix * aTangent);
 	tangent = normalize(tangent - dot(tangent, normal) * normal);
 	vec3 bitangent = cross(tangent, normal);
 	vs_out.tangentSpace = mat3(tangent, bitangent, normal);

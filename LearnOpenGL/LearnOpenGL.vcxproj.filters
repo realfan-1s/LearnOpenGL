@@ -28,6 +28,9 @@
     <Filter Include="shader\ScreenPostProcess">
       <UniqueIdentifier>{cb35db22-98bc-439c-819f-430187755841}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shader\AntiAliasing">
+      <UniqueIdentifier>{8350b5db-7b4a-49f2-b7df-5c2f4d76f1ab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\lightVertex.glsl">

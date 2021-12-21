@@ -14,7 +14,7 @@ private:
 	Shader* defferedShader;
 public:
 	Renderer();
-	void ComputeDepth(GLint targetFrameBuffer) const;
+	void ComputeDepth(GLint targetFrameBuffer = 0) const;
 	void Use(const float cameraNear, const float cameraFar) const;
 	void Use(const glm::vec2& nearAndFar) const;
 	unsigned int GetPosBuffer() const;

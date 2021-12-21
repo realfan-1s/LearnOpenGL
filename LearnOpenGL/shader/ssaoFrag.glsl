@@ -21,8 +21,10 @@ layout (std140, binding = 0) uniform Matrices {
 const vec2 aspect = vec2(1920.0 / 4.0, 1080.0 / 4.0); // 计算噪声缩放尺寸
 
 void main() {
-	vec3 fragPos = mat3(view) * texture(gPos, uv).xyz;
-	vec3 normal = mat3(view) * texture(gNormal, uv).xyz;
+	vec4 view_fragPos = view * vec4(texture(gPos, uv).xyz, 1.0);
+	vec3 fragPos = view_fragPos.xyz;
+	vec4 view_normal = view * vec4(texture(gNormal, uv).xyz, 0.0);
+	vec3 normal = view_normal.xyz;
 	// 需要将世界空间的法线变换到观察空间
 	vec3 random = normalize(texture(ssaoNoise, uv * aspect).xyz);
 	vec3 tangent = normalize(random - dot(random, normal) * normal);
@@ -37,9 +39,10 @@ void main() {
 		offset.xyz /= offset.w;
 		offset.xyz = 0.5 * offset.xyz + 0.5;
 		// 避免非物体表面的部分对遮蔽因子产生影响
-		float sampleDepth = -texture(gPos, offset.xy).w;
+		vec4 offsetPos = view * vec4(texture(gPos, offset.xy).xyz, 1.0);
+		float sampleDepth = offsetPos.z;
 		float checkEdge = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth)); // 当前像素的深度和采样位置深度之差
-		occulsion += (sampleDepth >= sampling.z + bias ? 1.0 : 0.0) * checkEdge;
+		occulsion += (sampleDepth > sampling.z + bias ? 1.0 : 0.0) * checkEdge;
 	}
 	occulsion = 1.0 - (occulsion / KERNEL_SIZE); // 根据核心的大小标准化遮蔽贡献
 	fragColor = occulsion;	

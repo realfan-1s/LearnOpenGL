@@ -90,7 +90,7 @@ void main() {
 	float visibility = CalculateShadow(fragPos, bias);
 	float atten = 1.0 / (1.0 + 0.7 * dist + 1.8 * dist * dist);
 	vec3 ambient = 0.3 * ao * diffuse;
-	vec3 result = ambient + visibility * BlinnPhong(normalDir, halfDir, lightDir, mainLight.lightColor, diffuse, specular) * atten;
+	vec3 result = 0.3 * diffuse + visibility * BlinnPhong(normalDir, halfDir, lightDir, mainLight.lightColor, diffuse, specular) * atten;
 	
 	for (uint i = 0; i < MAX_LIGHT_COUNT; ++i){
 		lightDir = lights[i].lightPos - fragPos;

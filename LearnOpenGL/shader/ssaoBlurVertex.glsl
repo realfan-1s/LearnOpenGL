@@ -7,5 +7,5 @@ out vec2 uv;
 
 void main() {
 	uv = aTexcoord;
-	gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0f);
+	gl_Position = vec4(aPos, 1.0f);
 }
