@@ -21,6 +21,7 @@
 #include "Shadow.h"
 #include "HDRLoader.h"
 #include "SSAO.h"
+#include "SSR.h"
 
 using namespace std;
 
@@ -61,7 +62,7 @@ int main() {
 	glfwSetFramebufferSizeCallback(window, &frameBuffer_Size_Callback);
 	glfwSetCursorPosCallback(window, &MouseCallback);
 	glfwSetScrollCallback(window, ZoomCallback);
-	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	// 初始化GLAD
 	if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
 		cout << " 初始化GLAD失败 " << endl;
@@ -118,21 +119,22 @@ int main() {
 	// */
 	//glVertexAttribPointer(0, 3, GL_FLOAT,   GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
 
+	SSAO ssao(0.5f, 0.025f);
+	HDRLoader hdr(0.6f);
+	SSR ssr;
 	Renderer renderer;
 	Shadow shadow;
-	HDRLoader hdr(0.6f);
-	SSAO ssao(0.5f, 0.025f);
 	Light light("shader/lightVertex.glsl", "shader/lightFrag.glsl");
 	Shader shader("shader/vertex.glsl", "shader/frag.glsl");
-	Shader quadShader("shader/quadVertex.glsl", "shader/quadFrag.glsl");
 	Shader lightShader("shader/lightCubeVertex.glsl", "shader/lightCubeFrag.glsl", "shader/lightCubeGeometry.glsl");
-	Model nanosuit("asset/objects/nanosuit/nanosuit.obj", true);
-	Model backpack("asset/objects/backpack/backpack.obj", true);
+	Model backpack("asset/objects/backpack/backpack.obj", true, true);
+	Model cyborg("asset/objects/cyborg/cyborg.obj", false, true);
 	unsigned int floor = loadTexture("asset/brickwall.jpg", true);
+	unsigned int floor_specular = loadTexture("asset/brickwall_specular.jpg", false);
 	unsigned int floor_normal = loadTexture("asset/brickwall_normal.jpg", false);
 	// lighting info -------------
-	glm::vec3 mainLightPosition = glm::vec3(-2.0f, 4.0f, -1.0f);
-	glm::vec3 mainLightColor = glm::vec3(100.0f);
+	glm::vec3 mainLightPosition(-2.0f, 4.0f, -1.0f);
+	glm::vec3 mainLightColor(100.0f);
 
 	float deltaTime = 0.0f, lastFrame = 0.0f;
 	float nearPlane = 1.0f, farPlane = 75.0f;
@@ -177,10 +179,13 @@ int main() {
 
 		shadow.Use();
 		lightShader.Use();
-		for (unsigned int i = 0; i < 6; ++i)
 		{
-			string name = "lightMatrix[" + to_string(i) + "]";
-			lightShader.SetMat4(name.c_str(), lightMatrix[i]);
+			int i = 0;
+			std::for_each(lightMatrix.begin(), lightMatrix.end(), [&lightShader, &i](auto lightMat) {
+				string name = "lightMatrix[" + to_string(i) + "]";
+				lightShader.SetMat4(name.c_str(), lightMat);
+				++i;
+			});
 		}
 		lightShader.SetVec3("lightPos", mainLightPosition);
 		lightShader.SetFloat("farPlane", farPlane);
@@ -191,15 +196,15 @@ int main() {
 		Model::RenderCube();
 		glEnable(GL_CULL_FACE);
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-5.0f, -2.0f, 2.0f));
+		model = glm::translate(model, glm::vec3(-5.0f, -2.5f, 2.0f));
 		lightShader.SetMat4("model", model);
 		backpack.Draw(lightShader);
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(4.0f, 2.0f, -2.0f));
 		model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
-		model = glm::scale(model, glm::vec3(0.35f, 0.35f, 0.35f));
 		lightShader.SetMat4("model", model);
-		nanosuit.Draw(lightShader);
+		cyborg.Draw(lightShader);
+
 
 		// 绘制物体,Geometry阶段
 		renderer.Use(camera.GetNearAndFar());
@@ -211,30 +216,30 @@ int main() {
 		renderer.GetGBuffer().SetInt("texture_diffuse1", 0);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, floor);
-		renderer.GetGBuffer().SetInt("texture_normal1", 1);
+		renderer.GetGBuffer().SetInt("texture_specular1", 1);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, floor_normal);
-		renderer.GetGBuffer().SetInt("texture_specular1", 2);
+		glBindTexture(GL_TEXTURE_2D, floor_specular);
+		renderer.GetGBuffer().SetInt("texture_normal1", 2);
 		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, floor_normal);
 		Model::RenderCube();
 		glEnable(GL_CULL_FACE);
 		renderer.GetGBuffer().SetInt("inverseNormal", 1);
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-5.0f, -2.0f, 2.0f));
+		model = glm::translate(model, glm::vec3(-5.0f, -2.5f, 2.0f));
 		renderer.GetGBuffer().SetMat4("model", model);
 		backpack.Draw(renderer.GetGBuffer());
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(4.0f, 2.0f, -2.0f));
 		model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
-		model = glm::scale(model, glm::vec3(0.35f, 0.35f, 0.35f));
 		renderer.GetGBuffer().SetMat4("model", model);
-		nanosuit.Draw(renderer.GetGBuffer());
+		cyborg.Draw(renderer.GetGBuffer());
 
 		ssao.Use(renderer.GetPosBuffer(), renderer.GetNormalBuffer());
+		ssr.Use(renderer.GetPosBuffer(), renderer.GetNormalBuffer(), renderer.GetColorBuffer());
 
-		//hdr.BindToFloat32FBO();
+		hdr.BindToFloat32FBO();
 		shader.Use();
-		shader.SetVec3("viewPos", camera.GetCameraPos());
 		shader.SetInt("gPosition", 0);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, renderer.GetPosBuffer());
@@ -250,11 +255,16 @@ int main() {
 		shader.SetInt("ambientOcclusion", 4);
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, ssao.GetOcclusion());
+		shader.SetInt("screenSpaceReflection", 5);
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, ssr.GetSSR());
+		shader.SetVec3("viewPos", camera.GetCameraPos());
 		shader.SetVec2("lightNearAndFar", nearPlane, farPlane);
 		shader.SetVec3("mainLight.lightPos", mainLightPosition);
 		shader.SetVec3("mainLight.lightColor", mainLightColor);
 		float mainRadius = Light::CalculateLightRadius(mainLightColor);
 		shader.SetFloat("mainLight.radius", mainRadius);
+		// TODO: 采用模板测试去除超出范围的灯光
 		for (int i = 0; i < MAX_LIGHT_COUNT; ++i)
 		{
 			shader.SetVec3(("lights[" + to_string(i) + "].lightPos").c_str(), lightPositions[i]);
@@ -264,26 +274,26 @@ int main() {
 		}
 		Model::RenderQuad();
 
-		//renderer.ComputeDepth(hdr.GetFBO());
-		//light.Use();
-		//model = glm::mat4(1.0f);
-		//model = glm::translate(model, mainLightPosition);
-		//model = glm::scale(model, glm::vec3(0.5f));
-		//light.SetMat4("model", model);
-		//light.SetVec3("lightColor", mainLightColor);
-		//Model::RenderCube();
-		//for (int i = 0; i < MAX_LIGHT_COUNT; ++i)
-		//{
-		//	model = glm::mat4(1.0f);
-		//	model = glm::translate(model, lightPositions[i]);
-		//	model = glm::scale(model, glm::vec3(0.15f));
-		//	light.SetMat4("model", model);
-		//	light.SetVec3("lightColor", lightColors[i]);
-		//	Model::RenderCube();
-		//}
+		renderer.ComputeDepth(hdr.GetFBO());
+		light.Use();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, mainLightPosition);
+		model = glm::scale(model, glm::vec3(0.5f));
+		light.SetMat4("model", model);
+		light.SetVec3("lightColor", mainLightColor);
+		Model::RenderCube();
+		for (int i = 0; i < MAX_LIGHT_COUNT; ++i)
+		{
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, lightPositions[i]);
+			model = glm::scale(model, glm::vec3(0.15f));
+			light.SetMat4("model", model);
+			light.SetVec3("lightColor", lightColors[i]);
+			Model::RenderCube();
+		}
 
-		//// 模糊泛光
-		//hdr.Use();
+		// 模糊泛光
+		hdr.Use();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -342,7 +352,7 @@ void ZoomCallback(GLFWwindow* window, double xPos, double yPos)
 	camera.ScrollCallback(yPos);
 }
 
-unsigned int loadTexture(char const * path, bool gammaCorrection)
+unsigned int loadTexture(const char* path, bool gammaCorrection)
 {
     unsigned int textureID;
     glGenTextures(1, &textureID);
@@ -362,7 +372,7 @@ unsigned int loadTexture(char const * path, bool gammaCorrection)
             internalFormat = gammaCorrection ? GL_SRGB : GL_RGB;
             dataFormat = GL_RGB;
         }
-        else if (nrComponents == 4)
+        else
         {
             internalFormat = gammaCorrection ? GL_SRGB_ALPHA : GL_RGBA;
             dataFormat = GL_RGBA;
@@ -375,7 +385,7 @@ unsigned int loadTexture(char const * path, bool gammaCorrection)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
         stbi_image_free(data);
     }

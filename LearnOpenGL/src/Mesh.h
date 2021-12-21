@@ -31,7 +31,7 @@ public:
 	std::vector<unsigned int> indices;
 	std::vector<Vertex> vertices;
 	std::vector<Texture> textures;
-	Mesh(vector<unsigned int> indices, vector<Vertex> vertices, vector<Texture> textures);
+	Mesh(vector<unsigned int>& indices, vector<Vertex>& vertices, vector<Texture>& textures);
 	void Draw(Shader& shader);
 };
 

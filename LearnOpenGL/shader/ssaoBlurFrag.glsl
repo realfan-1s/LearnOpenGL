@@ -1,11 +1,19 @@
 #version 450 core
-#define INV_PI 0.318309887
+
+out float fragColor;
 
 in vec2 uv;
 
-uniform sampler2D screenTexture;
+uniform sampler2D ssaoRaw;
 
 void main() {
-	vec3 col = texture(screenTexture, uv).rgb;
-	gl_FragColor = vec4(col, 1);
+	vec2 texelSize = 1.0 / textureSize(ssaoRaw, 0);
+	float result = 0.0;
+	for (int x = -2; x < 2; ++x){
+		for (int y = -2; y < 2; ++y){
+			vec2 offset = vec2(x * texelSize.x, y * texelSize.y);
+			result += texture(ssaoRaw, uv + offset).x;
+		}
+	}
+	fragColor = result / 16.0;
 }

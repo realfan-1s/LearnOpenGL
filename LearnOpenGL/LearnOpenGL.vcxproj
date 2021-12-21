@@ -158,16 +158,15 @@
     <ClCompile Include="src\Shadow.cpp" />
     <ClCompile Include="src\Skybox.cpp" />
     <ClCompile Include="src\SSAO.cpp" />
+    <ClCompile Include="src\SSR.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\blurFrag.glsl">
       <SubType>
       </SubType>
     </None>
-    <None Include="shader\blurVertex.glsl">
-      <SubType>
-      </SubType>
-    </None>
+    <None Include="shader\deferStencilFrag.glsl" />
+    <None Include="shader\deferStencilVertex.glsl" />
     <None Include="shader\frag.glsl" />
     <None Include="shader\gBufferFrag.glsl">
       <SubType>
@@ -178,10 +177,6 @@
       </SubType>
     </None>
     <None Include="shader\HDRFrag.glsl">
-      <SubType>
-      </SubType>
-    </None>
-    <None Include="shader\HDRVertex.glsl">
       <SubType>
       </SubType>
     </None>
@@ -221,6 +216,14 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="shader\rayMarchingFrag.glsl">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="shader\rayMarchingVertex.glsl">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="shader\skyboxFrag.glsl">
       <SubType>
       </SubType>
@@ -233,15 +236,7 @@
       <SubType>
       </SubType>
     </None>
-    <None Include="shader\ssaoBlurVertex.glsl">
-      <SubType>
-      </SubType>
-    </None>
     <None Include="shader\ssaoFrag.glsl">
-      <SubType>
-      </SubType>
-    </None>
-    <None Include="shader\ssaoVertex.glsl">
       <SubType>
       </SubType>
     </None>
@@ -260,6 +255,7 @@
     <ClInclude Include="src\Shadow.h" />
     <ClInclude Include="src\Skybox.h" />
     <ClInclude Include="src\SSAO.h" />
+    <ClInclude Include="src\SSR.h" />
     <ClInclude Include="src\stb_image.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

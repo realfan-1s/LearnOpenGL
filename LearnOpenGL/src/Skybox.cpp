@@ -26,7 +26,7 @@ void Skybox::LoadCubeMap(const char* path)
 			    format = GL_RED;
 			else if (colorChannel == 3)
 			    format = GL_RGB;
-			else if (colorChannel == 4)
+			else
 			    format = GL_RGBA;
 
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);

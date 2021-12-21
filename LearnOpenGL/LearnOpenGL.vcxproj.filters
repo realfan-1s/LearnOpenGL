@@ -28,6 +28,12 @@
     <Filter Include="shader\ScreenPostProcess">
       <UniqueIdentifier>{cb35db22-98bc-439c-819f-430187755841}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shader\ScreenPostProcess\SSAO">
+      <UniqueIdentifier>{31da0abb-6e74-4e19-9b26-b3c8d7e01c18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shader\ScreenPostProcess\SSR">
+      <UniqueIdentifier>{68ba3723-d2e2-4927-bcc8-b23581982ee7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\lightVertex.glsl">
@@ -57,13 +63,7 @@
     <None Include="shader\lightCubeGeometry.glsl">
       <Filter>shader</Filter>
     </None>
-    <None Include="shader\HDRVertex.glsl">
-      <Filter>shader\HDR</Filter>
-    </None>
     <None Include="shader\HDRFrag.glsl">
-      <Filter>shader\HDR</Filter>
-    </None>
-    <None Include="shader\blurVertex.glsl">
       <Filter>shader\HDR</Filter>
     </None>
     <None Include="shader\blurFrag.glsl">
@@ -87,17 +87,23 @@
     <None Include="shader\vertex.glsl">
       <Filter>shader\Renderer</Filter>
     </None>
-    <None Include="shader\ssaoVertex.glsl">
-      <Filter>shader\ScreenPostProcess</Filter>
+    <None Include="shader\deferStencilFrag.glsl">
+      <Filter>shader\Renderer</Filter>
     </None>
-    <None Include="shader\ssaoFrag.glsl">
-      <Filter>shader\ScreenPostProcess</Filter>
-    </None>
-    <None Include="shader\ssaoBlurVertex.glsl">
-      <Filter>shader\ScreenPostProcess</Filter>
+    <None Include="shader\deferStencilVertex.glsl">
+      <Filter>shader\Renderer</Filter>
     </None>
     <None Include="shader\ssaoBlurFrag.glsl">
-      <Filter>shader\ScreenPostProcess</Filter>
+      <Filter>shader\ScreenPostProcess\SSAO</Filter>
+    </None>
+    <None Include="shader\ssaoFrag.glsl">
+      <Filter>shader\ScreenPostProcess\SSAO</Filter>
+    </None>
+    <None Include="shader\rayMarchingVertex.glsl">
+      <Filter>shader\ScreenPostProcess\SSR</Filter>
+    </None>
+    <None Include="shader\rayMarchingFrag.glsl">
+      <Filter>shader\ScreenPostProcess\SSR</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -135,6 +141,9 @@
       <Filter>src\源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\SSAO.cpp">
+      <Filter>src\源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SSR.cpp">
       <Filter>src\源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -176,6 +185,9 @@
       <Filter>src\头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\SSAO.h">
+      <Filter>src\头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SSR.h">
       <Filter>src\头文件</Filter>
     </ClInclude>
   </ItemGroup>

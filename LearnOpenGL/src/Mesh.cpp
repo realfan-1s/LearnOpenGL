@@ -29,11 +29,11 @@ void Mesh::InitMesh() // 配置正确的缓冲区并通过顶点属性指针定义顶点着色器的布局
 	glBindVertexArray(0);
 }
 
-Mesh::Mesh(vector<unsigned> indices, vector<Vertex> vertices, vector<Texture> textures)
+Mesh::Mesh(vector<unsigned>& indices, vector<Vertex>& vertices, vector<Texture>& textures)
 {
-	this->indices = indices;
-	this->vertices = vertices;
-	this->textures = textures;
+	this->indices = std::move(indices);
+	this->vertices = std::move(vertices);
+	this->textures = std::move(textures);
 	InitMesh();
 }
 
@@ -45,7 +45,6 @@ void Mesh::Draw(Shader& shader)
 	unsigned int heightCount = 1;
 	for (int i = 0; i < textures.size(); ++i)
 	{
-		glActiveTexture(GL_TEXTURE0 + i);
 		string number;
 		string name = textures[i].type;
 		if (name == "texture_diffuse")

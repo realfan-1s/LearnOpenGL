@@ -23,6 +23,7 @@ uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
 uniform samplerCube texture_shadow;
 uniform sampler2D ambientOcclusion;
+uniform sampler2D screenSpaceReflection;
 const vec3 sampleOffsetDirection[27] = vec3[]
 (
 	vec3( 0,  0,  0), vec3( 0, -1,  0), vec3( 0,  1,  0), vec3( 0,   0, -1), 
@@ -102,6 +103,8 @@ void main() {
 			result += BlinnPhong(normalDir, halfDir, lightDir, lights[i].lightColor, diffuse, specular) * atten;
 		}
 	}
+	vec3 reflection = texture(screenSpaceReflection, uv).xyz;
+	result += reflection;
 	fragColor = vec4(result, 1.0);
 	float brightness = dot(result, vec3(0.2126, 0.7152, 0.0722));
 	if (brightness > 0.9){

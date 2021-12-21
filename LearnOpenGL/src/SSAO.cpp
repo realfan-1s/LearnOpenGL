@@ -14,9 +14,12 @@ SSAO::SSAO(float radius = 0.5f, float bias = 0.025f) : radius(radius), bias(bias
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoTex, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	glGenFramebuffers(1, &ssaoBlurFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
 	glGenTextures(1, &ssaoBlurTex);
+	glBindTexture(GL_TEXTURE_2D, ssaoBlurTex);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -50,12 +53,12 @@ SSAO::SSAO(float radius = 0.5f, float bias = 0.025f) : radius(radius), bias(bias
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	ssaoShader = new Shader("shader/ssaoVertex.glsl", "shader/ssaoFrag.glsl");
-	ssaoBlurShader = new Shader("shader/ssaoBlurVertex.glsl", "shader/ssaoBlurFrag.glsl");
+	ssaoShader = new Shader("shader/postProcessVertex.glsl", "shader/ssaoFrag.glsl");
+	ssaoBlurShader = new Shader("shader/postProcessVertex.glsl", "shader/ssaoBlurFrag.glsl");
 }
 
 unsigned int SSAO::GetOcclusion() const {
-	return ssaoTex;
+	return ssaoBlurTex;
 }
 
 void SSAO::Use(unsigned int gPos, unsigned int gNormal) const
@@ -81,14 +84,21 @@ void SSAO::Use(unsigned int gPos, unsigned int gNormal) const
 		ssaoShader->SetVec3(name.c_str(), ssaoKernel[i]);
 	}
 	Model::RenderQuad();
-	// TODO: Blur
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
+	glClear(GL_COLOR_BUFFER_BIT);
+	ssaoBlurShader->Use();
+	ssaoBlurShader->SetInt("ssaoRaw", 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, ssaoTex);
+	Model::RenderQuad();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 SSAO::~SSAO() {
-	delete ssaoKernel;
-	delete ssaoNoise;
+	delete[] ssaoKernel;
+	delete[] ssaoNoise;
 	delete ssaoBlurShader;
 	delete ssaoShader;
 	glDeleteFramebuffers(1, &ssaoBlurFBO);
