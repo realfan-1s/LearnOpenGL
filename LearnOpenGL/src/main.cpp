@@ -62,7 +62,7 @@ int main() {
 	glfwSetFramebufferSizeCallback(window, &frameBuffer_Size_Callback);
 	glfwSetCursorPosCallback(window, &MouseCallback);
 	glfwSetScrollCallback(window, ZoomCallback);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	// 初始化GLAD
 	if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
 		cout << " 初始化GLAD失败 " << endl;
