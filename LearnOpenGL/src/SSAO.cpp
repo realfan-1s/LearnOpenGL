@@ -53,8 +53,8 @@ SSAO::SSAO(float radius = 0.5f, float bias = 0.025f) : radius(radius), bias(bias
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	ssaoShader = new Shader("shader/ssaoVertex.glsl", "shader/ssaoFrag.glsl");
-	ssaoBlurShader = new Shader("shader/ssaoBlurVertex.glsl", "shader/ssaoBlurFrag.glsl");
+	ssaoShader = new Shader("shader/postProcessVertex.glsl", "shader/ssaoFrag.glsl");
+	ssaoBlurShader = new Shader("shader/postProcessVertex.glsl", "shader/ssaoBlurFrag.glsl");
 }
 
 unsigned int SSAO::GetOcclusion() const {
@@ -97,8 +97,8 @@ void SSAO::Use(unsigned int gPos, unsigned int gNormal) const
 }
 
 SSAO::~SSAO() {
-	delete ssaoKernel;
-	delete ssaoNoise;
+	delete[] ssaoKernel;
+	delete[] ssaoNoise;
 	delete ssaoBlurShader;
 	delete ssaoShader;
 	glDeleteFramebuffers(1, &ssaoBlurFBO);

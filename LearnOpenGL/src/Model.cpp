@@ -5,7 +5,7 @@
 void Model::LoadModel(const char* path)
 {
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_CalcTangentSpace); // 图元三角化和生成切线向量
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipUVs | aiProcess_GenSmoothNormals); // 图元三角化和生成切线向量
 	if (scene == nullptr || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << endl;
@@ -32,32 +32,28 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene)
 Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 {
 	vector<Vertex> vertices;
-    vector<unsigned int> indices;
-    vector<Texture> textures;
+	vector<unsigned int> indices;
+	vector<Texture> textures;
 
-    for(unsigned int i = 0; i < mesh->mNumVertices; i++)
-    {
-        Vertex vertex;
-        // 处理顶点位置、法线和纹理坐标
+	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+		Vertex vertex;
+		// 处理顶点位置、法线和纹理坐标
 		glm::vec3 vertPos;
 		glm::vec2 uv;
 		vertPos.x = mesh->mVertices[i].x;
 		vertPos.y = mesh->mVertices[i].y;
 		vertPos.z = mesh->mVertices[i].z;
-		if (mesh->HasNormals())
-		{
+		if (mesh->HasNormals()) {
 			glm::vec3 normal;
 			normal.x = mesh->mNormals[i].x;
 			normal.y = mesh->mNormals[i].y;
 			normal.z = mesh->mNormals[i].z;
 			vertex.normal = normal;
 		}
-		if (mesh->mTextureCoords[0])
-		{
+		if (mesh->mTextureCoords[0]) {
 			uv.x = mesh->mTextureCoords[0][i].x;
 			uv.y = mesh->mTextureCoords[0][i].y;
-			if (mesh->HasTangentsAndBitangents())
-			{
+			if (mesh->HasTangentsAndBitangents()) {
 				glm::vec3 tangent;
 				tangent.x = mesh->mTangents[i].x;
 				tangent.y = mesh->mTangents[i].y;
@@ -68,35 +64,32 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 			uv = vec2(0, 0);
 		vertex.position = vertPos;
 		vertex.uv = uv;
-        vertices.push_back(vertex);
-    }
+		vertices.emplace_back(vertex);
+	}
 	// indices Process
-	for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
-	{
+	for (unsigned int i = 0; i < mesh->mNumFaces; ++i) {
 		aiFace face = mesh->mFaces[i];
-		for (unsigned int j = 0; j < mesh->mFaces[i].mNumIndices; ++j)
-		{
+		for (unsigned int j = 0; j < mesh->mFaces[i].mNumIndices; ++j) {
 			indices.emplace_back(mesh->mFaces[i].mIndices[j]);
 		}
 	}
 	// material Process
-    if(mesh->mMaterialIndex >= 0)
-    {
+	if (mesh->mMaterialIndex > 0) {
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 		vector<Texture> diffuseMaps, specularMaps, normalMaps, heightMaps;
-    	LoadMaterialTextures(diffuseMaps, material, aiTextureType_DIFFUSE, "texture_diffuse", gammaCorrection);
-		LoadMaterialTextures(specularMaps, material, aiTextureType_SPECULAR, "texture_specular", gammaCorrection);
-		LoadMaterialTextures(normalMaps, material, aiTextureType_HEIGHT, "texture_normal", false);
-		LoadMaterialTextures(heightMaps, material, aiTextureType_AMBIENT, "texture_height", false);
+		LoadMaterialTextures(diffuseMaps, material, aiTextureType_DIFFUSE, "texture_diffuse", reverse, gammaCorrection);
+		LoadMaterialTextures(specularMaps, material, aiTextureType_SPECULAR, "texture_specular", reverse, gammaCorrection);
+		LoadMaterialTextures(normalMaps, material, aiTextureType_HEIGHT, "texture_normal", reverse, false);
+		LoadMaterialTextures(heightMaps, material, aiTextureType_AMBIENT, "texture_height", reverse, false);
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 		textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 		textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
-    }
-	return Mesh(indices, vertices, textures);
+	}
+	return { indices, vertices, textures };
 }
 
-void Model::LoadMaterialTextures(vector<Texture>& target, aiMaterial* material, aiTextureType type, string typeName, bool gammaCorrection)
+void Model::LoadMaterialTextures(vector<Texture>& target, aiMaterial* material, aiTextureType type, string typeName, bool reverse, bool gammaCorrection)
 {
 	for (unsigned int i = 0; i < material->GetTextureCount(type); ++i)
 	{
@@ -115,7 +108,7 @@ void Model::LoadMaterialTextures(vector<Texture>& target, aiMaterial* material, 
 		if (!skip)
 		{
 			Texture texture;
-			texture.id = LoadTextureFromFile(str.C_Str(), directory, false, gammaCorrection);
+			texture.id = LoadTextureFromFile(str.C_Str(), directory, reverse, gammaCorrection);
 			texture.type = typeName;
 			texture.path = str.C_Str();
 			target.emplace_back(texture);
@@ -167,7 +160,7 @@ unsigned Model::LoadTextureFromFile(const char* path, const string& directory, b
 	return textureID;
 }
 
-Model::Model(const char* path, bool gammaCorrection = false) : gammaCorrection(gammaCorrection)
+Model::Model(const char* path, bool reverse, bool gammaCorrection = false) : reverse(reverse) , gammaCorrection(gammaCorrection)
 {
 	LoadModel(path);
 }

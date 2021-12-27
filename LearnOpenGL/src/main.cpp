@@ -21,6 +21,7 @@
 #include "Shadow.h"
 #include "HDRLoader.h"
 #include "SSAO.h"
+#include "SSR.h"
 
 using namespace std;
 
@@ -118,20 +119,19 @@ int main() {
 	// */
 	//glVertexAttribPointer(0, 3, GL_FLOAT,   GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
 
-	SSAO ssao(0.5f, 0.025f);
-	HDRLoader hdr(0.6f);
 	Renderer renderer;
 	Shadow shadow;
 	Light light("shader/lightVertex.glsl", "shader/lightFrag.glsl");
 	Shader shader("shader/vertex.glsl", "shader/frag.glsl");
 	Shader lightShader("shader/lightCubeVertex.glsl", "shader/lightCubeFrag.glsl", "shader/lightCubeGeometry.glsl");
-	Model nanosuit("asset/objects/nanosuit/nanosuit.obj", true);
-	Model backpack("asset/objects/backpack/backpack.obj", true);
+	Model backpack("asset/objects/backpack/backpack.obj", true, true);
+	Model cyborg("asset/objects/cyborg/cyborg.obj", false, true);
 	unsigned int floor = loadTexture("asset/brickwall.jpg", true);
+	unsigned int floor_specular = loadTexture("asset/brickwall_specular.jpg", false);
 	unsigned int floor_normal = loadTexture("asset/brickwall_normal.jpg", false);
 	// lighting info -------------
-	glm::vec3 mainLightPosition = glm::vec3(-2.0f, 4.0f, -1.0f);
-	glm::vec3 mainLightColor = glm::vec3(100.0f);
+	glm::vec3 mainLightPosition(-2.0f, 4.0f, -1.0f);
+	glm::vec3 mainLightColor(100.0f);
 
 	float deltaTime = 0.0f, lastFrame = 0.0f;
 	float nearPlane = 1.0f, farPlane = 75.0f;
@@ -176,10 +176,13 @@ int main() {
 
 		shadow.Use();
 		lightShader.Use();
-		for (unsigned int i = 0; i < 6; ++i)
 		{
-			string name = "lightMatrix[" + to_string(i) + "]";
-			lightShader.SetMat4(name.c_str(), lightMatrix[i]);
+			int i = 0;
+			std::for_each(lightMatrix.begin(), lightMatrix.end(), [&lightShader, &i](auto lightMat) {
+				string name = "lightMatrix[" + to_string(i) + "]";
+				lightShader.SetMat4(name.c_str(), lightMat);
+				++i;
+			});
 		}
 		lightShader.SetVec3("lightPos", mainLightPosition);
 		lightShader.SetFloat("farPlane", farPlane);
@@ -190,15 +193,14 @@ int main() {
 		Model::RenderCube();
 		glEnable(GL_CULL_FACE);
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-5.0f, -2.0f, 2.0f));
+		model = glm::translate(model, glm::vec3(-5.0f, -2.5f, 2.0f));
 		lightShader.SetMat4("model", model);
 		backpack.Draw(lightShader);
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(4.0f, 2.0f, -2.0f));
 		model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
-		model = glm::scale(model, glm::vec3(0.35f, 0.35f, 0.35f));
 		lightShader.SetMat4("model", model);
-		nanosuit.Draw(lightShader);
+		cyborg.Draw(lightShader);
 
 
 		// »æÖÆÎïÌå,Geometry½×¶Î
@@ -211,26 +213,27 @@ int main() {
 		renderer.GetGBuffer().SetInt("texture_diffuse1", 0);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, floor);
-		renderer.GetGBuffer().SetInt("texture_normal1", 1);
+		renderer.GetGBuffer().SetInt("texture_specular1", 1);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, floor_normal);
-		renderer.GetGBuffer().SetInt("texture_specular1", 2);
+		glBindTexture(GL_TEXTURE_2D, floor_specular);
+		renderer.GetGBuffer().SetInt("texture_normal1", 2);
 		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, floor_normal);
 		Model::RenderCube();
 		glEnable(GL_CULL_FACE);
 		renderer.GetGBuffer().SetInt("inverseNormal", 1);
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-5.0f, -2.0f, 2.0f));
+		model = glm::translate(model, glm::vec3(-5.0f, -2.5f, 2.0f));
 		renderer.GetGBuffer().SetMat4("model", model);
 		backpack.Draw(renderer.GetGBuffer());
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(4.0f, 2.0f, -2.0f));
 		model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
-		model = glm::scale(model, glm::vec3(0.35f, 0.35f, 0.35f));
 		renderer.GetGBuffer().SetMat4("model", model);
-		nanosuit.Draw(renderer.GetGBuffer());
+		cyborg.Draw(renderer.GetGBuffer());
 
 		ssao.Use(renderer.GetPosBuffer(), renderer.GetNormalBuffer());
+		ssr.Use(renderer.GetPosBuffer(), renderer.GetNormalBuffer(), renderer.GetColorBuffer());
 
 		hdr.BindToFloat32FBO();
 		shader.Use();
@@ -249,7 +252,6 @@ int main() {
 		shader.SetInt("ambientOcclusion", 4);
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, ssao.GetOcclusion());
-		shader.SetVec3("viewPos", camera.GetCameraPos());
 		shader.SetVec2("lightNearAndFar", nearPlane, farPlane);
 		shader.SetVec3("mainLight.lightPos", mainLightPosition);
 		shader.SetVec3("mainLight.lightColor", mainLightColor);
@@ -343,7 +345,7 @@ void ZoomCallback(GLFWwindow* window, double xPos, double yPos)
 	camera.ScrollCallback(yPos);
 }
 
-unsigned int loadTexture(char const * path, bool gammaCorrection)
+unsigned int loadTexture(const char* path, bool gammaCorrection)
 {
     unsigned int textureID;
     glGenTextures(1, &textureID);
@@ -363,7 +365,7 @@ unsigned int loadTexture(char const * path, bool gammaCorrection)
             internalFormat = gammaCorrection ? GL_SRGB : GL_RGB;
             dataFormat = GL_RGB;
         }
-        else if (nrComponents == 4)
+        else
         {
             internalFormat = gammaCorrection ? GL_SRGB_ALPHA : GL_RGBA;
             dataFormat = GL_RGBA;
@@ -376,7 +378,7 @@ unsigned int loadTexture(char const * path, bool gammaCorrection)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
         stbi_image_free(data);
     }

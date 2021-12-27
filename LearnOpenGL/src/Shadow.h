@@ -5,8 +5,8 @@
 
 class Shadow {
 private:
-	unsigned int shadowFBO;
-	unsigned int shadowMap;
+	unsigned int shadowFBO{0};
+	unsigned int shadowMap{0};
 public:
 	Shadow();
 	unsigned int GetFBO() const;

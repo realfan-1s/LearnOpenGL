@@ -42,8 +42,8 @@ HDRLoader::HDRLoader(float exposure) : exposure(exposure)
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongBuffers[i], 0);
 	}
 
-	blur = new Shader("shader/blurVertex.glsl", "shader/blurFrag.glsl");
-	hdrShader = new Shader("shader/HDRVertex.glsl", "shader/HDRFrag.glsl");
+	blur = new Shader("shader/postProcessVertex.glsl", "shader/blurFrag.glsl");
+	hdrShader = new Shader("shader/postProcessVertex.glsl", "shader/HDRFrag.glsl");
 };
 
 void HDRLoader::BindToFloat32FBO() const

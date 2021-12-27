@@ -8,12 +8,14 @@ using namespace std;
 
 class Shader {
 private:
-	GLint programID;
+	GLint programID{0};
 	GLint GetUniformID(const char* name) const;
 public:
-	Shader(const GLchar* computeShaderPath);
-	Shader(const GLchar* vertexPath, const GLchar* fragmentPath);
-	Shader(const GLchar* vertexPath, const GLchar* fragmentPath, const GLchar* geometryPath);
+	explicit Shader(const GLchar* computeShaderPath);
+	explicit Shader(const GLchar* vertexPath, const GLchar* fragmentPath);
+	explicit Shader(const GLchar* vertexPath, const GLchar* fragmentPath, const GLchar* geometryPath);
+	Shader(Shader const&) = delete;
+	Shader& operator=(const Shader&) = delete;
 	void Use() const;
 	unsigned int GetProgramID() const;
 	void SetVec2(const char* name, float x, float y) const;

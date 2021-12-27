@@ -22,12 +22,12 @@ float LinearizeDepth(float depth) {
 }
 
 void main() {
-	// 有光照计算，保证所有变量在一个坐标空间当中至关重要。
+	// 保证所有变量在世界空间
 	gPosition = fs_in.fragPos.xyz;
 	vec3 normalDir = texture(texture_normal1, fs_in.uv).xyz;
-	normalDir = 2 * normalDir - 1;
+	normalDir = normalize(2 * normalDir - 1.0);
 	gNormal.xyz = normalize(fs_in.tangentSpace * normalDir);
-	gNormal.w = LinearizeDepth(gl_FragCoord.z);
+	gNormal.w = LinearizeDepth(gl_FragCoord.z) / nearAndFar.y; // 把线性深度值从[near, far]变换到[0, 1]
 	gAlbedo.xyz = texture(texture_diffuse1, fs_in.uv).xyz;
 	gAlbedo.w = texture(texture_specular1, fs_in.uv).x;
 }
