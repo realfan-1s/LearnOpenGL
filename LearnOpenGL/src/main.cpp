@@ -62,7 +62,7 @@ int main() {
 	glfwSetFramebufferSizeCallback(window, &frameBuffer_Size_Callback);
 	glfwSetCursorPosCallback(window, &MouseCallback);
 	glfwSetScrollCallback(window, ZoomCallback);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	// 初始化GLAD
 	if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
 		cout << " 初始化GLAD失败 " << endl;
@@ -119,9 +119,9 @@ int main() {
 	// */
 	//glVertexAttribPointer(0, 3, GL_FLOAT,   GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
 
-	SSAO ssao(0.5f, 0.025f);
-	HDRLoader hdr(0.6f);
+	SSAO ssao(0.5, 0.025);
 	SSR ssr;
+	HDRLoader hdr(0.6);
 	Renderer renderer;
 	Shadow shadow;
 	Light light("shader/lightVertex.glsl", "shader/lightFrag.glsl");
