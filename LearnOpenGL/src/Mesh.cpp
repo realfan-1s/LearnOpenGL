@@ -37,13 +37,13 @@ Mesh::Mesh(vector<unsigned>& indices, vector<Vertex>& vertices, vector<Texture>&
 	InitMesh();
 }
 
-void Mesh::Draw(Shader& shader)
+void Mesh::Draw(Shader& __restrict shader)
 {
 	unsigned int diffuseCount = 1;
 	unsigned int specularCount = 1;
 	unsigned int normalCount = 1;
 	unsigned int heightCount = 1;
-	for (int i = 0; i < textures.size(); ++i)
+	for (unsigned int i = 0; i < textures.size(); ++i)
 	{
 		string number;
 		string name = textures[i].type;

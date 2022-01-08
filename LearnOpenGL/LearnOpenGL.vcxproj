@@ -103,10 +103,18 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <AdditionalIncludeDirectories>E:\Vulkan\Include;E:\Vulkan\Third-Party\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>MaxSpeed</Optimization>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <AdditionalOptions>/arch:AVX2 /openmp:experimental %(AdditionalOptions)</AdditionalOptions>
+      <OpenMPSupport>true</OpenMPSupport>
+      <StringPooling>true</StringPooling>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <EnableModules>false</EnableModules>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -165,7 +173,11 @@
       <SubType>
       </SubType>
     </None>
-    <None Include="shader\deferStencilFrag.glsl" />
+    <None Include="shader\deferStencilFrag.glsl">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="shader\pointLightFrag.glsl" />
     <None Include="shader\deferStencilVertex.glsl" />
     <None Include="shader\frag.glsl" />
     <None Include="shader\gBufferFrag.glsl">

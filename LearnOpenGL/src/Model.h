@@ -14,19 +14,19 @@ private:
 	string directory;
 	bool reverse, gammaCorrection;
 	void LoadModel(const char* path);
-	void ProcessNode(aiNode* node, const aiScene* scene);
-	Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
-	void LoadMaterialTextures(vector<Texture>& target, aiMaterial* material, aiTextureType type, string typeName, bool reverse, bool gamma);
+	void ProcessNode(aiNode* __restrict node, const aiScene* scene);
+	Mesh ProcessMesh(aiMesh* __restrict mesh, const aiScene* scene);
+	void LoadMaterialTextures(vector<Texture>& target, aiMaterial* __restrict material, aiTextureType type, string typeName, bool reverse, bool gamma);
 	unsigned int LoadTextureFromFile(const char* path, const string& directory, bool reverse, bool gamma) const;
-	static unsigned int cubeVAO;
-	static unsigned int cubeVBO;
-	static unsigned int quadVAO;
-	static unsigned int quadVBO;
+	static unsigned int cubeVAO, cubeVBO;
+	static unsigned int quadVAO, quadVBO;
+	static unsigned int sphereVAO, sphereVBO, sphereEBO;
 public:
 	Model(const char* path, bool reverse, bool gammaCorrection);
-	void Draw(Shader& shader) const;
+	void Draw(Shader& __restrict shader);
 	static void RenderCube();
 	static glm::vec3 CalculateTangent(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 pos3, glm::vec2 uv1, glm::vec2 uv2, glm::vec2 uv3);
 	static void RenderQuad();
+	static void RenderSphere();
 };
 
