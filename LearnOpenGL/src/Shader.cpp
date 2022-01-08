@@ -26,7 +26,7 @@ Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath)
 	}
 	catch (ifstream::failure& e)
 	{
-		std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ \n" << e.what() << std::endl;
+		std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ \n" << e.what() << "\n" << vertexPath << std::endl;
 	}
 	const char* c_vertexCode = vertexCode.c_str();
 	const char* c_fragmentCode = fragmentCode.c_str();
@@ -61,7 +61,9 @@ Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath)
 	glAttachShader(programID, fragment);
 	glLinkProgram(programID);
 
+	glDetachShader(programID, GL_VERTEX_SHADER);
 	glDeleteShader(vertex);
+	glDetachShader(programID, GL_FRAGMENT_SHADER);
 	glDeleteShader(fragment);
 	delete[] infoLog;
 	infoLog = nullptr;
@@ -140,8 +142,11 @@ Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath, const GLcha
 	glAttachShader(programID, fragment);
 	glLinkProgram(programID);
 
+	glDetachShader(programID, GL_VERTEX_SHADER);
 	glDeleteShader(vertex);
+	glDetachShader(programID, GL_FRAGMENT_SHADER);
 	glDeleteShader(fragment);
+	glDetachShader(programID, GL_GEOMETRY_SHADER);
 	glDeleteShader(geometry);
 	delete[] infoLog;
 }
@@ -207,6 +212,7 @@ Shader::Shader(const GLchar* computeShaderPath)
 	glAttachShader(programID, compute);
 	glLinkProgram(programID);
 
+	glDetachShader(programID, GL_COMPUTE_SHADER);
 	glDeleteShader(compute);
 	delete[] infoLog;
 }

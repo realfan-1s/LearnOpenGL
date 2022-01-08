@@ -43,7 +43,7 @@ void Mesh::Draw(Shader& shader)
 	unsigned int specularCount = 1;
 	unsigned int normalCount = 1;
 	unsigned int heightCount = 1;
-	for (int i = 0; i < textures.size(); ++i)
+	for (unsigned int i = 0; i < textures.size(); ++i)
 	{
 		string number;
 		string name = textures[i].type;

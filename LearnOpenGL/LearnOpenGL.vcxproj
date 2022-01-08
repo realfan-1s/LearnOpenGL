@@ -165,7 +165,11 @@
       <SubType>
       </SubType>
     </None>
-    <None Include="shader\deferStencilFrag.glsl" />
+    <None Include="shader\deferStencilFrag.glsl">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="shader\pointLightFrag.glsl" />
     <None Include="shader\deferStencilVertex.glsl" />
     <None Include="shader\frag.glsl" />
     <None Include="shader\gBufferFrag.glsl">

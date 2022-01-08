@@ -17,13 +17,14 @@ struct Light{
 uniform vec3 viewPos;
 uniform vec2 lightNearAndFar;
 uniform Light mainLight;
-uniform Light lights[MAX_LIGHT_COUNT];
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
 uniform samplerCube texture_shadow;
 uniform sampler2D ambientOcclusion;
 uniform sampler2D screenSpaceReflection;
+uniform sampler2D pointLight;
+
 const vec3 sampleOffsetDirection[27] = vec3[]
 (
 	vec3( 0,  0,  0), vec3( 0, -1,  0), vec3( 0,  1,  0), vec3( 0,   0, -1), 
@@ -92,17 +93,7 @@ void main() {
 	float atten = 1.0 / (1.0 + 0.7 * dist + 1.8 * dist * dist);
 	vec3 ambient = 0.3 * ao * diffuse;
 	vec3 result = ambient + visibility * BlinnPhong(normalDir, halfDir, lightDir, mainLight.lightColor, diffuse, specular) * atten;
-	
-	for (uint i = 0; i < MAX_LIGHT_COUNT; ++i){
-		lightDir = lights[i].lightPos - fragPos;
-		dist = length(lightDir);
-		if (dist < lights[i].radius) {
-			lightDir = normalize(lightDir);
-			halfDir = normalize(lightDir + viewDir);
-			atten = 1.0 / (1.0 + 0.7 * dist + 1.8 * dist * dist);
-			result += BlinnPhong(normalDir, halfDir, lightDir, lights[i].lightColor, diffuse, specular) * atten;
-		}
-	}
+	result += texture(pointLight, uv).xyz;
 	vec3 reflection = texture(screenSpaceReflection, uv).xyz;
 	result += reflection;
 	fragColor = vec4(result, 1.0);

@@ -1,6 +1,10 @@
 #include "Model.h"
 #include <iostream>
 #include "stb_image.h"
+#include "DataDefine.h"
+
+#define X_SEGMENTS 50
+#define Y_SEGMENTS 50
 
 void Model::LoadModel(const char* path)
 {
@@ -165,9 +169,9 @@ Model::Model(const char* path, bool reverse, bool gammaCorrection = false) : rev
 	LoadModel(path);
 }
 
-void Model::Draw(Shader& shader) const
+void Model::Draw(Shader& shader)
 {
-	for (auto mesh : meshes)
+	for (auto& mesh : meshes)
 	{
 		mesh.Draw(shader);
 	}
@@ -308,8 +312,76 @@ void Model::RenderQuad()
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
     }
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
+}
+
+unsigned int Model::sphereVAO = 0;
+unsigned int Model::sphereVBO = 0;
+unsigned int Model::sphereEBO = 0;
+
+void Model::RenderSphere()
+{
+	const unsigned int count = (X_SEGMENTS + 1) * (Y_SEGMENTS + 1) * 2;
+	if (sphereVAO == 0)
+	{
+		vector<float> sphereVertices;
+		vector<unsigned int> sphereIndices;
+		for (int x = 0; x <= X_SEGMENTS; ++x)
+			for (int y = 0; y <= Y_SEGMENTS; ++y)
+			{
+				float xSegment = static_cast<float>(x) / static_cast<float>(X_SEGMENTS);
+				float ySegment = static_cast<float>(y) / static_cast<float>(Y_SEGMENTS);
+				float xPos = std::cos(2.0f * PI * xSegment) * sin(PI * ySegment);
+				float yPos = cos(PI * ySegment);
+				float zPos = std::sin(2.0f * PI * xSegment) * sin(PI * ySegment);
+				sphereVertices.emplace_back(xPos);
+				sphereVertices.emplace_back(yPos);
+				sphereVertices.emplace_back(zPos);
+				sphereVertices.emplace_back(xSegment);
+				sphereVertices.emplace_back(ySegment);
+			}
+
+		bool oddRow = false;
+		for (int y = 0; y <= Y_SEGMENTS; ++y)
+		{
+			if (oddRow)
+			{
+				for (int x = 0; x <= X_SEGMENTS; ++x)
+				{
+					sphereIndices.emplace_back(y * (X_SEGMENTS + 1) + x);
+					sphereIndices.emplace_back((y + 1) * (X_SEGMENTS + 1) + x);
+				}
+			} else
+			{
+				for (int x = X_SEGMENTS; x >= 0; --x)
+				{
+					sphereIndices.emplace_back((y + 1) * (X_SEGMENTS + 1) + x);
+					sphereIndices.emplace_back(y * (X_SEGMENTS + 1) + x);
+				}
+
+			}
+			oddRow = !oddRow;
+		}
+			
+		glGenVertexArrays(1, &sphereVAO);
+		glGenBuffers(1, &sphereVBO);
+		glGenBuffers(1, &sphereEBO);
+		glBindVertexArray(sphereVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * sphereVertices.size(), &sphereVertices[0], GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * sphereIndices.size(), &sphereIndices[0], GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<const void*>(0));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<const void*>(3 * sizeof(float)));
+	}
+	glBindVertexArray(sphereVAO);
+	glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, nullptr);
+	glBindVertexArray(0);
 }

@@ -87,7 +87,7 @@
     <None Include="shader\vertex.glsl">
       <Filter>shader\Renderer</Filter>
     </None>
-    <None Include="shader\deferStencilFrag.glsl">
+    <None Include="shader\pointLightFrag.glsl">
       <Filter>shader\Renderer</Filter>
     </None>
     <None Include="shader\deferStencilVertex.glsl">
@@ -104,6 +104,9 @@
     </None>
     <None Include="shader\rayMarchingFrag.glsl">
       <Filter>shader\ScreenPostProcess\SSR</Filter>
+    </None>
+    <None Include="shader\deferStencilFrag.glsl">
+      <Filter>shader\Renderer</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

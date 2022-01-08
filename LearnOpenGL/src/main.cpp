@@ -174,7 +174,7 @@ int main() {
 		// 输入检测
 		Input_Monitor(window, deltaTime);
 		camera.Use();
-		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+		glClearColor(0, 0, 0, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shadow.Use();
@@ -235,6 +235,17 @@ int main() {
 		renderer.GetGBuffer().SetMat4("model", model);
 		cyborg.Draw(renderer.GetGBuffer());
 
+		for (unsigned int i = 0; i < MAX_LIGHT_COUNT; ++i)
+		{
+			model = glm::mat4(1.0f);
+			float radius = Light::CalculateLightRadius(lightColors[i]);
+			model = glm::translate(model, lightPositions[i]);
+			model = glm::scale(model, glm::vec3(radius));
+			renderer.StencilPass(BindState::bind, model);
+			renderer.PointLightPass({lightPositions[i], lightColors[i], radius}, camera.GetCameraPos());
+		}
+		renderer.StencilPass(BindState::unbind, model);
+
 		ssao.Use(renderer.GetPosBuffer(), renderer.GetNormalBuffer());
 		ssr.Use(renderer.GetPosBuffer(), renderer.GetNormalBuffer(), renderer.GetColorBuffer());
 
@@ -258,20 +269,15 @@ int main() {
 		shader.SetInt("screenSpaceReflection", 5);
 		glActiveTexture(GL_TEXTURE5);
 		glBindTexture(GL_TEXTURE_2D, ssr.GetSSR());
+		shader.SetInt("pointLight", 6);
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, renderer.GetPointLight());
 		shader.SetVec3("viewPos", camera.GetCameraPos());
 		shader.SetVec2("lightNearAndFar", nearPlane, farPlane);
 		shader.SetVec3("mainLight.lightPos", mainLightPosition);
 		shader.SetVec3("mainLight.lightColor", mainLightColor);
 		float mainRadius = Light::CalculateLightRadius(mainLightColor);
 		shader.SetFloat("mainLight.radius", mainRadius);
-		// TODO: 采用模板测试去除超出范围的灯光
-		for (int i = 0; i < MAX_LIGHT_COUNT; ++i)
-		{
-			shader.SetVec3(("lights[" + to_string(i) + "].lightPos").c_str(), lightPositions[i]);
-			shader.SetVec3(("lights[" + to_string(i) + "].lightColor").c_str(), lightColors[i]);
-			float radius = Light::CalculateLightRadius(lightColors[i]);
-			shader.SetFloat(("lights[" + to_string(i) + "].radius").c_str(), radius);
-		}
 		Model::RenderQuad();
 
 		renderer.ComputeDepth(hdr.GetFBO());
@@ -295,6 +301,7 @@ int main() {
 		// 模糊泛光
 		hdr.Use();
 
+		renderer.ClearPointLightPass();
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
