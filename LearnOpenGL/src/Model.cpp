@@ -172,7 +172,7 @@ Model::Model(const char* path, bool reverse, bool gammaCorrection = false) : rev
 	LoadModel(path);
 }
 
-void Model::Draw(Shader& __restrict shader)
+void Model::Draw(Shader& shader)
 {
 	for (auto& mesh : meshes)
 	{

@@ -23,7 +23,7 @@ private:
 	static unsigned int sphereVAO, sphereVBO, sphereEBO;
 public:
 	Model(const char* path, bool reverse, bool gammaCorrection);
-	void Draw(Shader& __restrict shader);
+	void Draw(Shader& shader);
 	static void RenderCube();
 	static glm::vec3 CalculateTangent(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 pos3, glm::vec2 uv1, glm::vec2 uv2, glm::vec2 uv3);
 	static void RenderQuad();
