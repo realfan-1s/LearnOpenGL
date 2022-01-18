@@ -9,7 +9,7 @@ in vec2 uv;
 uniform sampler2D gPos;
 uniform sampler2D gNormal;
 uniform sampler2D ssaoNoise;
-uniform vec3 samples[64];
+uniform vec3 samples[KERNEL_SIZE];
 uniform float radius;
 uniform float bias;
 

@@ -23,10 +23,11 @@ private:
 	static unsigned int sphereVAO, sphereVBO, sphereEBO;
 public:
 	Model(const char* path, bool reverse, bool gammaCorrection);
-	void Draw(Shader& shader);
+	void Draw(const Shader& shader);
 	static void RenderCube();
 	static glm::vec3 CalculateTangent(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 pos3, glm::vec2 uv1, glm::vec2 uv2, glm::vec2 uv3);
 	static void RenderQuad();
 	static void RenderSphere();
+	static void TransformModel(glm::mat4& model, const glm::vec3& translate, const glm::vec4& rotate, const glm::vec3& scale);
 };
 

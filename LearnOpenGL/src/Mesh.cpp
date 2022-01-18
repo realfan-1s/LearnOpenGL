@@ -37,7 +37,7 @@ Mesh::Mesh(vector<unsigned>& indices, vector<Vertex>& vertices, vector<Texture>&
 	InitMesh();
 }
 
-void Mesh::Draw(Shader& __restrict shader)
+void Mesh::Draw(const Shader& shader) const
 {
 	unsigned int diffuseCount = 1;
 	unsigned int specularCount = 1;

@@ -2,6 +2,7 @@
 #include <iostream>
 #include "stb_image.h"
 #include "DataDefine.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 #define X_SEGMENTS 50
 #define Y_SEGMENTS 50
@@ -172,7 +173,7 @@ Model::Model(const char* path, bool reverse, bool gammaCorrection = false) : rev
 	LoadModel(path);
 }
 
-void Model::Draw(Shader& shader)
+void Model::Draw(const Shader& shader)
 {
 	for (auto& mesh : meshes)
 	{
@@ -393,4 +394,19 @@ void Model::RenderSphere()
 	glBindVertexArray(sphereVAO);
 	glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, nullptr);
 	glBindVertexArray(0);
+}
+
+void Model::TransformModel(glm::mat4& model, const glm::vec3& translate, const glm::vec4& rotate, const glm::vec3& scale) {
+	model = glm::mat4(1.0f);
+	std::visit([&](auto needTranslate, auto needRotate, auto needScale) {
+		if constexpr (needTranslate)
+			model = glm::translate(model, translate);
+		if constexpr (needRotate)
+			model = glm::rotate(model, radians(rotate.x), glm::vec3(rotate.y, rotate.z, rotate.w));
+		if constexpr (needScale)
+			model = glm::scale(model, scale);
+	},
+	MakeBoolVariant(translate != glm::vec3(0)),
+	MakeBoolVariant(rotate != glm::vec4(0, 0, 0, 1)),
+	MakeBoolVariant(scale != glm::vec3(1)));
 }
