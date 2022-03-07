@@ -17,13 +17,14 @@ struct Light{
 uniform vec3 viewPos;
 uniform vec2 lightNearAndFar;
 uniform Light mainLight;
-uniform Light lights[MAX_LIGHT_COUNT];
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
 uniform samplerCube texture_shadow;
 uniform sampler2D ambientOcclusion;
 uniform sampler2D screenSpaceReflection;
+uniform sampler2D pointLight;
+
 const vec3 sampleOffsetDirection[27] = vec3[]
 (
 	vec3( 0,  0,  0), vec3( 0, -1,  0), vec3( 0,  1,  0), vec3( 0,   0, -1), 
@@ -43,7 +44,7 @@ vec3 BlinnPhong(vec3 normalDir, vec3 halfDir, vec3 lightDir, vec3 lightColor, ve
 float FindBlocker(vec3 fragToLight, float currDepth, float bias){
 	uint blocker = 0;
 	float result = 0.0;
-	float r = LIGHT_WIDTH * (currDepth - lightNearAndFar.x / lightNearAndFar.y) / currDepth;
+	float r = currDepth * lightNearAndFar.x / lightNearAndFar.y;
 	for (int i = 0; i < 27; ++i) {
 		float closeDepth = texture(texture_shadow, fragToLight + r * sampleOffsetDirection[i]).x;
 		closeDepth *= lightNearAndFar.y;
@@ -62,7 +63,7 @@ float CalculateShadow(vec3 fragPos, float bias) {
 	float averageDepth = FindBlocker(fragToLight, currDepth, bias);
 	if (averageDepth == -1.0)
 		return 1.0;
-	float penumbra = LIGHT_WIDTH * (currDepth - averageDepth)/ averageDepth;
+	float penumbra = LIGHT_WIDTH * (currDepth - averageDepth)/ averageDepth; // w = d_width * (drecever - dblocker) / dblocker
 	float radius = penumbra * lightNearAndFar.x / currDepth;
 	// 它们差不多都是分开的，每一个指向完全不同的方向，剔除彼此接近的那些子方向。
 	for (int i = 0; i < 27; ++i) {
@@ -91,20 +92,10 @@ void main() {
 	float visibility = CalculateShadow(fragPos, bias);
 	float atten = 1.0 / (1.0 + 0.7 * dist + 1.8 * dist * dist);
 	vec3 ambient = 0.3 * ao * diffuse;
-	vec3 result = 0.3 * diffuse + visibility * BlinnPhong(normalDir, halfDir, lightDir, mainLight.lightColor, diffuse, specular) * atten;
-	
-	for (uint i = 0; i < MAX_LIGHT_COUNT; ++i){
-		lightDir = lights[i].lightPos - fragPos;
-		dist = length(lightDir);
-		if (dist < lights[i].radius) {
-			lightDir = normalize(lightDir);
-			halfDir = normalize(lightDir + viewDir);
-			atten = 1.0 / (1.0 + 0.7 * dist + 1.8 * dist * dist);
-			result += BlinnPhong(normalDir, halfDir, lightDir, lights[i].lightColor, diffuse, specular) * atten;
-		}
-	}
+	vec3 result = ambient + visibility * BlinnPhong(normalDir, halfDir, lightDir, mainLight.lightColor, diffuse, specular) * atten;
+	result += texture(pointLight, uv).xyz;
 	vec3 reflection = texture(screenSpaceReflection, uv).xyz;
-	result += reflection;
+	result = mix(result, reflection, 0.5);
 	fragColor = vec4(result, 1.0);
 	float brightness = dot(result, vec3(0.2126, 0.7152, 0.0722));
 	if (brightness > 0.9){

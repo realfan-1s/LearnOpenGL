@@ -1,6 +1,11 @@
 #include "Model.h"
 #include <iostream>
 #include "stb_image.h"
+#include "DataDefine.h"
+#include <glm/gtc/matrix_transform.hpp>
+
+#define X_SEGMENTS 50
+#define Y_SEGMENTS 50
 
 void Model::LoadModel(const char* path)
 {
@@ -16,20 +21,22 @@ void Model::LoadModel(const char* path)
 	ProcessNode(scene->mRootNode, scene);
 }
 
-void Model::ProcessNode(aiNode* node, const aiScene* scene)
+void Model::ProcessNode(aiNode* __restrict node, const aiScene* scene)
 {
+	#pragma omp simd
 	for (unsigned int i = 0; i < node->mNumMeshes; ++i)
 	{
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		meshes.emplace_back(ProcessMesh(mesh, scene));
 	}
+	#pragma omp simd
 	for (unsigned int i = 0; i < node->mNumChildren; ++i)
 	{
 		ProcessNode(node->mChildren[i], scene);
 	}
 }
 
-Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+Mesh Model::ProcessMesh(aiMesh* __restrict mesh, const aiScene* scene)
 {
 	vector<Vertex> vertices;
 	vector<unsigned int> indices;
@@ -89,8 +96,9 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 	return { indices, vertices, textures };
 }
 
-void Model::LoadMaterialTextures(vector<Texture>& target, aiMaterial* material, aiTextureType type, string typeName, bool reverse, bool gammaCorrection)
+void Model::LoadMaterialTextures(vector<Texture>& target, aiMaterial* __restrict material, aiTextureType type, string typeName, bool reverse, bool gammaCorrection)
 {
+	#pragma omp simd
 	for (unsigned int i = 0; i < material->GetTextureCount(type); ++i)
 	{
 		aiString str;
@@ -165,9 +173,9 @@ Model::Model(const char* path, bool reverse, bool gammaCorrection = false) : rev
 	LoadModel(path);
 }
 
-void Model::Draw(Shader& shader) const
+void Model::Draw(const Shader& shader)
 {
-	for (auto mesh : meshes)
+	for (auto& mesh : meshes)
 	{
 		mesh.Draw(shader);
 	}
@@ -224,6 +232,7 @@ void Model::RenderCube() {
             -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
         };
 		float finalVertices[11 * 6 * 6];
+    	#pragma omp simd
 		for (unsigned int i = 0; i < 288; i += 24)
 		{
 			glm::vec3 pos1 = glm::vec3(vertices[i], vertices[i + 1], vertices[i + 2]);
@@ -308,8 +317,96 @@ void Model::RenderQuad()
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
     }
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
+}
+
+unsigned int Model::sphereVAO = 0;
+unsigned int Model::sphereVBO = 0;
+unsigned int Model::sphereEBO = 0;
+
+void Model::RenderSphere()
+{
+	const unsigned int count = (X_SEGMENTS + 1) * (Y_SEGMENTS + 1) * 2;
+	if (sphereVAO == 0)
+	{
+		vector<float> sphereVertices;
+		vector<unsigned int> sphereIndices;
+		#pragma omp simd
+		for (int x = 0; x <= X_SEGMENTS; ++x){
+			#pragma omp simd
+			for (int y = 0; y <= Y_SEGMENTS; ++y)
+			{
+				float xSegment = static_cast<float>(x) / static_cast<float>(X_SEGMENTS);
+				float ySegment = static_cast<float>(y) / static_cast<float>(Y_SEGMENTS);
+				float xPos = std::cos(2.0f * PI * xSegment) * sin(PI * ySegment);
+				float yPos = cos(PI * ySegment);
+				float zPos = std::sin(2.0f * PI * xSegment) * sin(PI * ySegment);
+				sphereVertices.emplace_back(xPos);
+				sphereVertices.emplace_back(yPos);
+				sphereVertices.emplace_back(zPos);
+				sphereVertices.emplace_back(xSegment);
+				sphereVertices.emplace_back(ySegment);
+			}
+		}
+		bool oddRow = false;
+    	#pragma omp simd
+		for (int y = 0; y <= Y_SEGMENTS; ++y)
+		{
+			if (oddRow)
+			{
+				#pragma omp simd
+				for (int x = 0; x <= X_SEGMENTS; ++x)
+				{
+					sphereIndices.emplace_back(y * (X_SEGMENTS + 1) + x);
+					sphereIndices.emplace_back((y + 1) * (X_SEGMENTS + 1) + x);
+				}
+			} else
+			{
+				#pragma omp simd
+				for (int x = X_SEGMENTS; x >= 0; --x)
+				{
+					sphereIndices.emplace_back((y + 1) * (X_SEGMENTS + 1) + x);
+					sphereIndices.emplace_back(y * (X_SEGMENTS + 1) + x);
+				}
+
+			}
+			oddRow = !oddRow;
+		}
+			
+		glGenVertexArrays(1, &sphereVAO);
+		glGenBuffers(1, &sphereVBO);
+		glGenBuffers(1, &sphereEBO);
+		glBindVertexArray(sphereVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * sphereVertices.size(), &sphereVertices[0], GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * sphereIndices.size(), &sphereIndices[0], GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<const void*>(0));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<const void*>(3 * sizeof(float)));
+	}
+	glBindVertexArray(sphereVAO);
+	glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, nullptr);
+	glBindVertexArray(0);
+}
+
+void Model::TransformModel(glm::mat4& model, const glm::vec3& translate, const glm::vec4& rotate, const glm::vec3& scale) {
+	model = glm::mat4(1.0f);
+	std::visit([&](auto needTranslate, auto needRotate, auto needScale) {
+		if constexpr (needTranslate)
+			model = glm::translate(model, translate);
+		if constexpr (needRotate)
+			model = glm::rotate(model, radians(rotate.x), glm::vec3(rotate.y, rotate.z, rotate.w));
+		if constexpr (needScale)
+			model = glm::scale(model, scale);
+	},
+	MakeBoolVariant(translate != glm::vec3(0)),
+	MakeBoolVariant(rotate != glm::vec4(0, 0, 0, 1)),
+	MakeBoolVariant(scale != glm::vec3(1)));
 }

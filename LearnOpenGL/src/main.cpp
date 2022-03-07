@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <omp_llvm.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -17,7 +18,6 @@
 #include "Model.h"
 #include "DataDefine.h"
 #include "Renderer.h"
-#include "Skybox.h"
 #include "Shadow.h"
 #include "HDRLoader.h"
 #include "SSAO.h"
@@ -119,6 +119,9 @@ int main() {
 	// */
 	//glVertexAttribPointer(0, 3, GL_FLOAT,   GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
 
+	SSAO ssao(0.5, 0.025);
+	SSR ssr;
+	HDRLoader hdr(0.6);
 	Renderer renderer;
 	Shadow shadow;
 	Light light("shader/lightVertex.glsl", "shader/lightFrag.glsl");
@@ -140,6 +143,7 @@ int main() {
 	vec3 lightPositions[MAX_LIGHT_COUNT];
 	vec3 lightColors[MAX_LIGHT_COUNT];
 	srand(509);
+	#pragma omp parallel
 	for (int i = 0 ;i < MAX_LIGHT_COUNT; ++i)
 	{
 		float xPos = ((rand() % 100) / 100.0) * 12.0 - 6.0f;
@@ -171,14 +175,14 @@ int main() {
 		// 输入检测
 		Input_Monitor(window, deltaTime);
 		camera.Use();
-		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+		glClearColor(0, 0, 0, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shadow.Use();
 		lightShader.Use();
 		{
 			int i = 0;
-			std::for_each(lightMatrix.begin(), lightMatrix.end(), [&lightShader, &i](auto lightMat) {
+			std::for_each(lightMatrix.begin(), lightMatrix.end(), [&lightShader, &i](const auto& lightMat) {
 				string name = "lightMatrix[" + to_string(i) + "]";
 				lightShader.SetMat4(name.c_str(), lightMat);
 				++i;
@@ -188,17 +192,15 @@ int main() {
 		lightShader.SetFloat("farPlane", farPlane);
 		glDisable(GL_CULL_FACE);
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::scale(model, glm::vec3(7.0f, 7.0f, 7.0f));
+		Model::TransformModel(model, vec3(0), vec4(vec3(0), 1), vec3(7.0f));
 		lightShader.SetMat4("model", model);
 		Model::RenderCube();
 		glEnable(GL_CULL_FACE);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-5.0f, -2.5f, 2.0f));
+		Model::TransformModel(model, glm::vec3(-5.0f, -2.5f, 2.0f), glm::vec4(vec3(0), 1), glm::vec3(1));
 		lightShader.SetMat4("model", model);
 		backpack.Draw(lightShader);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(4.0f, 2.0f, -2.0f));
-		model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
+		vec4 rotate = vec4(60.0f, glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
+		Model::TransformModel(model, glm::vec3(4.0f, 2.0f, -2.0f), rotate, glm::vec3(1, 1, 1));
 		lightShader.SetMat4("model", model);
 		cyborg.Draw(lightShader);
 
@@ -206,8 +208,7 @@ int main() {
 		// 绘制物体,Geometry阶段
 		renderer.Use(camera.GetNearAndFar());
 		glDisable(GL_CULL_FACE);
-		model = glm::mat4(1.0f);
-		model = glm::scale(model, glm::vec3(7.0f, 7.0f, 7.0f));
+		Model::TransformModel(model, vec3(0), vec4(vec3(0), 1), vec3(7.0f));
 		renderer.GetGBuffer().SetMat4("model", model);
 		renderer.GetGBuffer().SetInt("inverseNormal", -1);
 		renderer.GetGBuffer().SetInt("texture_diffuse1", 0);
@@ -222,15 +223,23 @@ int main() {
 		Model::RenderCube();
 		glEnable(GL_CULL_FACE);
 		renderer.GetGBuffer().SetInt("inverseNormal", 1);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-5.0f, -2.5f, 2.0f));
+		Model::TransformModel(model, glm::vec3(-5.0f, -2.5f, 2.0f), glm::vec4(vec3(0), 1), glm::vec3(1));
 		renderer.GetGBuffer().SetMat4("model", model);
 		backpack.Draw(renderer.GetGBuffer());
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(4.0f, 2.0f, -2.0f));
-		model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
+
+		Model::TransformModel(model, glm::vec3(4.0f, 2.0f, -2.0f), rotate, glm::vec3(1, 1, 1));
 		renderer.GetGBuffer().SetMat4("model", model);
 		cyborg.Draw(renderer.GetGBuffer());
+
+		#pragma omp parallel
+		for (unsigned int i = 0; i < MAX_LIGHT_COUNT; ++i)
+		{
+			float radius = Light::CalculateLightRadius(lightColors[i]);
+			Model::TransformModel(model, lightPositions[i], glm::vec4(0, 0, 0, 1), glm::vec3(radius));
+			renderer.StencilPass(BindState::bind, model);
+			renderer.PointLightPass({lightPositions[i], lightColors[i], radius}, camera.GetCameraPos());
+		}
+		renderer.StencilPass(BindState::unbind, model);
 
 		ssao.Use(renderer.GetPosBuffer(), renderer.GetNormalBuffer());
 		ssr.Use(renderer.GetPosBuffer(), renderer.GetNormalBuffer(), renderer.GetColorBuffer());
@@ -252,19 +261,18 @@ int main() {
 		shader.SetInt("ambientOcclusion", 4);
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, ssao.GetOcclusion());
+		shader.SetInt("screenSpaceReflection", 5);
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, ssr.GetSSR());
+		shader.SetInt("pointLight", 6);
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, renderer.GetPointLight());
+		shader.SetVec3("viewPos", camera.GetCameraPos());
 		shader.SetVec2("lightNearAndFar", nearPlane, farPlane);
 		shader.SetVec3("mainLight.lightPos", mainLightPosition);
 		shader.SetVec3("mainLight.lightColor", mainLightColor);
 		float mainRadius = Light::CalculateLightRadius(mainLightColor);
 		shader.SetFloat("mainLight.radius", mainRadius);
-		// TODO: 采用模板测试去除超出范围的灯光
-		for (int i = 0; i < MAX_LIGHT_COUNT; ++i)
-		{
-			shader.SetVec3(("lights[" + to_string(i) + "].lightPos").c_str(), lightPositions[i]);
-			shader.SetVec3(("lights[" + to_string(i) + "].lightColor").c_str(), lightColors[i]);
-			float radius = Light::CalculateLightRadius(lightColors[i]);
-			shader.SetFloat(("lights[" + to_string(i) + "].radius").c_str(), radius);
-		}
 		Model::RenderQuad();
 
 		renderer.ComputeDepth(hdr.GetFBO());
@@ -275,11 +283,10 @@ int main() {
 		light.SetMat4("model", model);
 		light.SetVec3("lightColor", mainLightColor);
 		Model::RenderCube();
+		#pragma omp simd
 		for (int i = 0; i < MAX_LIGHT_COUNT; ++i)
 		{
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, lightPositions[i]);
-			model = glm::scale(model, glm::vec3(0.15f));
+			Model::TransformModel(model, lightPositions[i], glm::vec4(0, 0, 0, 1), glm::vec3(0.15f));
 			light.SetMat4("model", model);
 			light.SetVec3("lightColor", lightColors[i]);
 			Model::RenderCube();
@@ -288,6 +295,7 @@ int main() {
 		// 模糊泛光
 		hdr.Use();
 
+		renderer.ClearPointLightPass();
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
