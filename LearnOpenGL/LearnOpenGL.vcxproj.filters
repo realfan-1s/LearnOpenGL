@@ -87,20 +87,20 @@
     <None Include="shader\deferStencilVertex.glsl">
       <Filter>shader\Renderer</Filter>
     </None>
-    <None Include="shader\ssaoBlurFrag.glsl">
-      <Filter>shader\ScreenPostProcess\SSAO</Filter>
-    </None>
-    <None Include="shader\ssaoFrag.glsl">
-      <Filter>shader\ScreenPostProcess\SSAO</Filter>
-    </None>
-    <None Include="shader\rayMarchingVertex.glsl">
-      <Filter>shader\ScreenPostProcess\SSR</Filter>
-    </None>
-    <None Include="shader\rayMarchingFrag.glsl">
-      <Filter>shader\ScreenPostProcess\SSR</Filter>
-    </None>
     <None Include="shader\deferStencilFrag.glsl">
       <Filter>shader\Renderer</Filter>
+    </None>
+    <None Include="shader\ssaoFrag.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\rayMarchingFrag.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\rayMarchingVertex.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\ssaoBlurFrag.glsl">
+      <Filter>shader</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

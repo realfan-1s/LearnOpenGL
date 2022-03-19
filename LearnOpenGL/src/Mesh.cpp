@@ -1,6 +1,7 @@
 #include "Mesh.h"
 
 #include <iostream>
+#include <variant>
 
 void Mesh::InitMesh() // 配置正确的缓冲区并通过顶点属性指针定义顶点着色器的布局
 {
@@ -43,26 +44,29 @@ void Mesh::Draw(const Shader& shader) const
 	unsigned int specularCount = 1;
 	unsigned int normalCount = 1;
 	unsigned int heightCount = 1;
-	for (unsigned int i = 0; i < textures.size(); ++i)
+	for (int i = 0; i < textures.size(); ++i)
 	{
 		string number;
 		string name = textures[i].type;
-		if (name == "texture_diffuse")
-		{
-			number = std::to_string(diffuseCount++);
-		} else if (name == "texture_specular")
-		{
-			number = std::to_string(specularCount++);
-		} else if (name == "texture_normal")
-		{
-			number = std::to_string(normalCount++);
-		} else if (name == "texture_height")
-		{
-			number = std::to_string(heightCount++);
-		} else
-		{
-			std::cout << "无法输入此类纹理 " << name << endl;
-		}
+		static constexpr char texType1[] = "texture_diffuse";
+		static constexpr char texType2[] = "texture_specular";
+		static constexpr char texType3[] = "texture_normal";
+		static constexpr char texType4[] = "texture_height";
+		std::visit([&](auto diffuse, auto specular, auto normal, auto height) {
+			if constexpr (diffuse) {
+				number = std::to_string(diffuseCount++);
+			} else if constexpr  (specular) {
+				number = std::to_string(specularCount++);
+			} else if constexpr  (normal) {
+				number = std::to_string(normalCount++);
+			} else if constexpr  (height) {
+				number = std::to_string(heightCount++);
+			} else {
+				std::cout << "无法输入此类纹理 " << name << endl;
+			}}, JudgeName<texType1>(name), 
+				JudgeName<texType2>(name), 
+				JudgeName<texType3>(name), 
+				JudgeName<texType4>(name));
 		shader.SetInt((name + number).c_str(), i);
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);

@@ -146,13 +146,13 @@ int main() {
 	#pragma omp parallel
 	for (int i = 0 ;i < MAX_LIGHT_COUNT; ++i)
 	{
-		float xPos = ((rand() % 100) / 100.0) * 12.0 - 6.0f;
-        float yPos = ((rand() % 100) / 100.0) * 12.0 - 6.0f;
-        float zPos = ((rand() % 100) / 100.0) * 12.0 - 6.0f;
+		float xPos = ((rand() % 100) / 100.0f) * 12.0f - 6.0f;
+        float yPos = ((rand() % 100) / 100.0f) * 12.0f - 6.0f;
+        float zPos = ((rand() % 100) / 100.0f) * 12.0f - 6.0f;
 		lightPositions[i] = vec3(xPos, yPos, zPos);
-		float rColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
-        float gColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
-        float bColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
+		float rColor = ((rand() % 100) / 200.0f) + 0.5f; // between 0.5 and 1.0
+        float gColor = ((rand() % 100) / 200.0f) + 0.5f; // between 0.5 and 1.0
+        float bColor = ((rand() % 100) / 200.0f) + 0.5f; // between 0.5 and 1.0
 		lightColors[i] = vec3(rColor, gColor, bColor);
 	}
 
@@ -283,7 +283,6 @@ int main() {
 		light.SetMat4("model", model);
 		light.SetVec3("lightColor", mainLightColor);
 		Model::RenderCube();
-		#pragma omp simd
 		for (int i = 0; i < MAX_LIGHT_COUNT; ++i)
 		{
 			Model::TransformModel(model, lightPositions[i], glm::vec4(0, 0, 0, 1), glm::vec3(0.15f));

@@ -3,6 +3,8 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "Shader.h"
+#include <optional>
+#include <variant>
 
 using namespace std;
 using namespace glm;
@@ -22,6 +24,16 @@ struct Texture
 	string type;
 	string path;
 };
+
+template <const char* type>
+static variant<std::true_type, std::false_type> JudgeName(const string& name)
+{
+	if (strcmp(name.c_str(), type))
+	{
+		return std::false_type();
+	}
+	return std::true_type();
+}
 
 class Mesh {
 private:

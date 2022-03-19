@@ -31,9 +31,16 @@ SSAO::SSAO(float radius = 0.5f, float bias = 0.025f) : radius(radius), bias(bias
 	std::default_random_engine generator;
 	for (int i = 0; i < 64; ++i)
 	{
-		glm::vec3 sample(randomFloat(generator) * 2.0 - 1.0, randomFloat(generator) * 2.0 - 1.0, randomFloat(generator));
+		float gamma1 = randomFloat(generator);
+		float gamma2 = 2 * PI * randomFloat(generator);
+		float sinPhi = std::sinhf(gamma2);
+		float cosPhi = std::sqrtf(1 - sinPhi * sinPhi);
+		float cosTheta = sqrtf(gamma1);
+		float sinTheta = sqrtf(1 - gamma1);
+		glm::vec3 sample(sinTheta * cosPhi,
+			sinTheta * sinPhi,
+			cosTheta);
 		sample = glm::normalize(sample);
-		sample *= randomFloat(generator);
 		float scale = static_cast<float>(i) / 64.0f;
 		scale = LERP(0.1f, 1.0f, scale * scale); // 采样的值越靠近原点越好,因为我们更关注靠近真正片段的遮蔽
 		sample *= scale;

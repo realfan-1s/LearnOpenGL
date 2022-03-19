@@ -88,7 +88,7 @@ void main() {
 	float dist = length(lightDir);
 	lightDir = normalize(lightDir);
 	vec3 halfDir = normalize(lightDir + viewDir);
-	float bias = max(0.05 * (1.0 - dot(normalDir, lightDir)), 0.005);
+	float bias = max(0.05 * (1.0 - dot(normalDir, lightDir)), 0.005); // 避免表面坡度很大，仍然会产生阴影失真的现象
 	float visibility = CalculateShadow(fragPos, bias);
 	float atten = 1.0 / (1.0 + 0.7 * dist + 1.8 * dist * dist);
 	vec3 ambient = 0.3 * ao * diffuse;

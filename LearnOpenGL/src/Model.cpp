@@ -23,13 +23,11 @@ void Model::LoadModel(const char* path)
 
 void Model::ProcessNode(aiNode* __restrict node, const aiScene* scene)
 {
-	#pragma omp simd
 	for (unsigned int i = 0; i < node->mNumMeshes; ++i)
 	{
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		meshes.emplace_back(ProcessMesh(mesh, scene));
 	}
-	#pragma omp simd
 	for (unsigned int i = 0; i < node->mNumChildren; ++i)
 	{
 		ProcessNode(node->mChildren[i], scene);
@@ -98,7 +96,6 @@ Mesh Model::ProcessMesh(aiMesh* __restrict mesh, const aiScene* scene)
 
 void Model::LoadMaterialTextures(vector<Texture>& target, aiMaterial* __restrict material, aiTextureType type, string typeName, bool reverse, bool gammaCorrection)
 {
-	#pragma omp simd
 	for (unsigned int i = 0; i < material->GetTextureCount(type); ++i)
 	{
 		aiString str;
@@ -232,7 +229,6 @@ void Model::RenderCube() {
             -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
         };
 		float finalVertices[11 * 6 * 6];
-    	#pragma omp simd
 		for (unsigned int i = 0; i < 288; i += 24)
 		{
 			glm::vec3 pos1 = glm::vec3(vertices[i], vertices[i + 1], vertices[i + 2]);
@@ -336,9 +332,7 @@ void Model::RenderSphere()
 	{
 		vector<float> sphereVertices;
 		vector<unsigned int> sphereIndices;
-		#pragma omp simd
 		for (int x = 0; x <= X_SEGMENTS; ++x){
-			#pragma omp simd
 			for (int y = 0; y <= Y_SEGMENTS; ++y)
 			{
 				float xSegment = static_cast<float>(x) / static_cast<float>(X_SEGMENTS);
@@ -354,12 +348,10 @@ void Model::RenderSphere()
 			}
 		}
 		bool oddRow = false;
-    	#pragma omp simd
 		for (int y = 0; y <= Y_SEGMENTS; ++y)
 		{
 			if (oddRow)
 			{
-				#pragma omp simd
 				for (int x = 0; x <= X_SEGMENTS; ++x)
 				{
 					sphereIndices.emplace_back(y * (X_SEGMENTS + 1) + x);
@@ -367,7 +359,6 @@ void Model::RenderSphere()
 				}
 			} else
 			{
-				#pragma omp simd
 				for (int x = X_SEGMENTS; x >= 0; --x)
 				{
 					sphereIndices.emplace_back((y + 1) * (X_SEGMENTS + 1) + x);
